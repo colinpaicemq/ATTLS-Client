@@ -1,0 +1,190 @@
+// this code is called from the main TCP task to run as a subtask
+// Author Colin Paice colinpaice3@gmail.com
+
+#include <unistd.h>
+void *thread(void *arg) {
+  HEREIAM
+  char *ret = "";
+  int rc;
+  char    userid[8];
+  int userlen = 8             ;
+  printf("thread() entered with argument '%s'\n", arg);
+  unsigned short port;       /* port server binds to                */
+  char buf[4096];            /* buffer for sending & receiving data */
+  char outBuff[4096];        /* buffer for sending & receiving data */
+  int  lOutBuff = 0;         /* gets the size of the data in buf    */
+  struct sockaddr_in client; /* client address information          */
+  struct sockaddr_in server; /* server address information          */
+  int  sock;                 /* socket for accepting connections    */
+  int namelen;               /* length of client name               */
+
+  /*
+   * First argument should be the port.
+   */
+  port = (unsigned short) atoi(arg);
+
+  /*
+   * Get a socket for accepting connections.
+   */
+  int Socket_vector[2]; /// but only one used
+  int rv = 0 ;
+  int rs = 0 ;
+  int Domain = AF_INET;
+  int Type   = SOCK_STREAM;
+  int Protocol =  0 ;
+  int Dimension = 1; // size of socket 1/2 sockets
+  BPX1SOC(&Domain,
+          &Type,
+          &Protocol,
+          &Dimension,
+          &Socket_vector,
+          &rv,
+          &rc,
+          &rs);
+  if (check("BPX1SOC",rv,rc,rs) != 0)
+  exit(1);
+  printf("BPX1SOC socket value %d\n",Socket_vector[0]);
+  //
+  //
+  //  By default reuse is set to time out
+  //  which is > 1 minute
+  //  need to set it to reuse (now)
+  //  before bind
+  //
+  long operation = 2 ; // SOCK#OPTOPTSETSOCKOPT
+  long name      = SO_REUSEADDR;
+  long level     = SOL_SOCKET ;
+  long data      = 1 ;
+  long lData     = sizeof(data);
+  BPX1OPT(&Socket_vector[0],
+          &operation,
+          &level ,
+          &name  ,
+          &lData ,
+          &data  ,
+          &rv,
+          &rc,
+          &rs);
+  if (check("BPX1OPT SET SO_REUSEADDR",rv,rc,rs) != 0)
+    exit(2);
+  /*
+   * Bind the socket to the server address.
+   */
+  server.sin_family = AF_INET;
+  server.sin_port   = htons(port);
+  server.sin_addr.s_addr = INADDR_ANY;
+  int lServer = sizeof(server);
+  sock = Socket_vector[0];
+  BPX1BND(&Socket_vector[0],
+          &lServer,
+          &server,
+          &rv,
+          &rc,
+          &rs);
+  if (check("BPX1BND",rv,rc,rs) != 0)
+    exit(2);
+  /*
+   * Listen for connections. Specify the backlog as 1.
+   */
+  int backlog = 1;
+  BPX1LSN(&Socket_vector[0],
+           &backlog,
+           &rv,
+           &rc,
+           &rs);
+  if (check("BPX1LSN",rv,rc,rs) != 0)
+    exit(1);
+  /*
+   * Accept a connection.
+   */
+  int lClient = sizeof(client);
+  BPX1ACP(&Socket_vector[0],
+          &lClient,
+          &client,
+          &rv,
+          &rc,
+          &rs);
+  if (check("BPX1ACP",rv,rc,rs) < 0 ) // -1 is error
+    exit(4);
+  int sd = rv; // save the returned value
+  HEREIAM
+  // extract data from ATTLS
+  #include <attls.h>
+  HEREIAM
+  // start the connection
+  #include <attlssta.h>
+  HEREIAM
+
+  int lbuff = sizeof(buf);
+  int alet = 0;
+  int flags = MSG_PEEK;
+  BPX1RCV(&sd,   // socket desciptor
+          &lbuff,
+          &buf,
+          &alet,
+          &flags,
+          &rv, // -1 or number of bytes
+          &rc,
+          &rs);
+  if (check("BPX1RCV Peek",rv,rc,rs) <0  )
+    exit(4);
+  printf("BPX1RCV Peek bytes %d data... \n",rv   );
+  printHex(stdout,buf,rv);
+  lbuff = rv; // the number of bytes in the buffer
+  flags = 0       ;
+  BPX1RCV( &sd,   // socket desciptor
+          &lbuff,
+          &buf,
+          &alet,
+          &flags,
+          &rv, // -1 or number of bytes
+          &rc,
+          &rs);
+  if (check("BPX1RCV",rv,rc,rs) <0  )
+    exit(4);
+  printf("BPX1RCV bytes %d data... %4.4s\n",rv,buf );
+ // memcpy(&buf[0],"COLIN",5);
+    lbuff = rv;
+  char * pOut = &outBuff[0];
+  ascii_it(&outBuff[0],lOutBuff);
+  HEREIAM
+//printHex(stdout,&outBuff,lOutBuff);
+  BPX1SND(&sd              , // descriptor
+          &lOutBuff,
+          &outBuff,
+          &alet,
+          &flags,
+          &rv,
+          &rc,
+          &rs);
+  if (check("BPX1SND",rv,rc,rs) != 0)
+    exit(5);
+
+  /*
+   * Send the message back to the client.
+   */
+#ifdef no
+ rc = __getuserid(&userid[0], userlen);
+ printf("getuser rc %d\n",rc);
+ printf("userid %d  %*.*s\n",userlen,userlen,userlen,userid);
+#endif
+  sleep(1);  // sleep to allow the send to get there and back
+             // to prevent problems with socket inuse
+    BPX1CLO(&sd              , // descriptor
+            &rv,
+            &rc,
+            &rs);
+    if (check("BPX1CLO client",rv,rc,rs) != 0)
+      exit(5);
+
+    BPX1CLO(&sock            , // oescriptor
+            &rv,
+            &rc,
+            &rs);
+    if (check("BPX1CLO server",rv,rc,rs) != 0)
+      exit(5);
+
+
+ pthread_exit(ret);
+ exit(0);
+}

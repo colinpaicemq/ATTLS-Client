@@ -1,0 +1,104 @@
+// program to act as a TCP/IP client on z/OS supporting ATTLS
+//  Author - Colin Paice colinpaice3@gmail.com
+//
+// Use the following on Linux (your parameters will be different)
+// openssl s_client  -connect 10.1.1.2:4000  -CAfile doczosca.pem
+// -key  docec256.key.pem -certform PEM
+//  openssl s_client  -connect 10.1.1.2:4000
+// shell
+// name=docecgen
+//  openssl s_client  -connect 10.1.1.2:4000  -CAfile doczosca.pem
+//  -cert $name.pem -certform PEM -key $name.key.pem   -keyform PEM
+//
+// This prompts for data which is sent to the server
+//
+//  Attach a subtask for the pthread change to certificate
+#pragma runopts(POSIX(ON)
+// define debug trace info
+#define HEREIAM printf("File:%s Line:%d  \n", __FILE__,__LINE__);
+   #define _OPEN_SYS 1
+   #define  _OPEN_THREADS
+   #include <pthread.h>
+   #include <socket.h>
+   #include <in.h>
+   #include <stdio.h>
+   #include <errno.h>
+
+   #include <stdlib.h>
+   #include <EZBZTLSC.h>
+   #include <EZBZMONC.h>
+   #include <stdio.h>
+   #include <stdlib.h>
+   #include <string.h>
+   #include <stdarg.h>
+   #include <errno.h>
+   #define _OPEN_SYS_EXT
+   #include <sys/ps.h>
+   #include <PRINTHEX.h>
+   #include <attlsh.h>    // define header files
+
+   #include <ATTLSPR.h>   // print ATTLS stuff
+
+ //
+#include <noerr.h>
+int check( char * name, int rv, int rc, int rs)
+{
+  if ( rv == -1) // problem
+    {
+      perror(name);
+      printf("%s rv %d rc %s(%d) rs %d (0x%8.8x) %s\n",
+      name,rv,getnoerr(rc),rc,rs,rs,strerror(rc));
+    }
+    else
+      printf("%s rv %d\n",name,rv);
+   return rv;
+}
+/*
+ * Server Main.
+ */
+ // include the thread code
+#include <attlsst.h>
+main(argc, argv)
+int argc;
+char **argv;
+{
+ typedef struct _colin1 {
+     int                         i1;
+     int                         i2;
+ } colin1               ;
+ typedef struct _colin2 {
+     int                         h1;
+     int                         h2;
+     union {
+         colin1                  cc1;
+         int                     i3;
+     } u;
+ } colinz        ;
+long const  myconst      = 99;
+ colinz colinz2;
+ printf("size of %i\n",sizeof(colinz));
+ #ifdef temp
+  printf("Compiled %s %s.\n", __DATE__, __TIME__);
+  pthread_t thid;
+  int rc;
+  void *ret;
+   if (argc != 2)
+   {
+       fprintf(stderr, "Usage: %s port\n", argv[0]);
+       exit(1);
+   }
+  if (pthread_create(&thid, NULL, thread, argv[1]) != 0) {
+    perror("pthread_create() error");
+    exit(1);
+  }
+  //
+  // now wait till the thread ends
+  //
+  rc =pthread_join(thid, &ret);
+  printf("Pthread join %d\n",rc);
+  if (rc  != 0) {
+  }
+  printf("thread exited with '%s'\n", ret);
+  #endif
+  return 0  ;
+}

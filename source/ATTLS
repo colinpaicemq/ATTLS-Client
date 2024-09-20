@@ -1,0 +1,50 @@
+  // AT-TLS query data
+  HEREIAM
+  memset(&ioc,0,sizeof(ioc));     //* set all unused fields to zero
+  ioc.TTLSi_Req_Type = TTLS_QUERY_ONLY ;
+  int command;
+
+  command = SIOCTTLSCTL;
+  ioc.TTLSi_Ver = TTLS_VERSION2;
+  int lioc;
+  lioc = sizeof(ioc);
+  //
+  // this is used for getting data from ATTLS
+  // a header and a number of quads
+  //
+  memset(&query,0,sizeof(query));
+  // move the eye catcher
+  memcpy(&query.header.TTLSHeaderIdent[0],TTLSHeaderIdentifier,8);
+  query.header.TTLSHdr_BytesNeeded = 136 ;
+  query.header.TTLSHdr_BytesNeeded = 0  ;
+  query.header.TTLSHdr_SetCount =  0;
+  query.header.TTLSHdr_GetCount =  4;
+
+  query.q1.TTLSQ_Key = TTLSK_TTLSRuleName  ;
+
+  query.q2.TTLSQ_Key = TTLSK_TTLSGroupActionName;
+
+  query.q3.TTLSQ_Key = TTLSK_TTLSEnvironmentActionName ;
+
+  query.q4.TTLSQ_Key = TTLSK_TTLSConnectionActionName ;
+//query.q4.TTLSQ_Length     =  0;
+
+//query.q5.TTLSQ_Key = TTLSK_Host_Status   ;
+
+  ioc.TTLSi_BufferPtr = (char *) &query;
+  ioc.TTLSi_BufferLen = sizeof(query);
+//printHex(stdout,&query,256);
+  ioc.TTLSi_Ver = TTLS_VERSION2;
+
+  BPX1IOC(&sd,
+            &command,
+            &lioc,
+            &ioc ,
+            &rv,
+            &rc,
+            &rs);
+   HEREIAM
+   printf("After IOC\n");
+   if (check("BPX1IOC",rv,rc,rs) != 0)
+      exit(1);
+   printATTLS( &ioc,rv,rc,rs);

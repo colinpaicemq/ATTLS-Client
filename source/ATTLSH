@@ -1,0 +1,37 @@
+ struct  {
+   struct TTLSHeader header;
+   struct TTLSQuadruplet q1;
+   struct TTLSQuadruplet q2;
+   struct TTLSQuadruplet q3;
+   struct TTLSQuadruplet q4;
+   struct TTLSQuadruplet q5;
+   char buffer[4096];
+ } query;
+
+  char * Stat_Policy[]={
+     "reserved",
+     "AT-TLS function is off",
+     "No policy defined for connection",
+     "Policy defined for connection - AT-TLS not enabled",
+     "Policy defined for connection - AT-TLS enabled",
+     "Policy defined for connection - AT-TLS enabled and "
+     "Application Controlled"};
+ char * Stat_Conn[] = {
+       "reserved",
+       "Connection is not secure",
+       "Connection handshake in progress",
+       "Connection is secure"};
+ char * Set_type[] = {
+     "reserved",
+     "Client",
+     "Server",
+     "Server with client authentication "
+     "ClientAuthType = PassThru",
+     "Server with client authentication "
+     "ClientAuthType = Full",
+     "Server with client authentication "
+     "ClientAuthType = Required ",
+     "Server with client authentication "
+     "ClientAuthType = SAFCheck"};
+ struct TTLS_IOCTL ioc;            // ioctl data structure
+ char buff[1000];                  // buffer for certificate

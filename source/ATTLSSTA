@@ -1,0 +1,36 @@
+  HEREIAM
+  command = SIOCTTLSCTL;
+  ioc.TTLSi_Ver = TTLS_VERSION2;
+  lioc = sizeof(ioc);
+  ioc.TTLSi_Req_Type = TTLS_INIT_CONNECTION ;
+  HEREIAM
+  printf("TTLS_INIT_CONNECTION\n");
+  //
+  //
+  memset(&query,0,sizeof(query));
+  // move the eye catcher
+  memcpy(&query.header.TTLSHeaderIdent[0],TTLSHeaderIdentifier,8);
+  query.header.TTLSHdr_BytesNeeded = 128;
+  query.header.TTLSHdr_SetCount =  0;
+  query.header.TTLSHdr_GetCount =  0;
+  ioc.TTLSi_BufferPtr = 0;
+  ioc.TTLSi_BufferLen = 0;
+//printHex(stdout,&query,256);
+  ioc.TTLSi_Ver = TTLS_VERSION2;
+  BPX1IOC(&sd,
+            &command,
+            &lioc,
+            &ioc ,
+            &rv,
+            &rc,
+            &rs);
+  HEREIAM
+  if (check("BPX1SOC TTLS_INIT_CONNECTION ",rv,rc,rs) != 0)
+      exit(1);
+  printATTLS( &ioc,rv,rc,rs);
+  HEREIAM
+  printf("Get the certificate information \n");
+  if (rv >= 0)
+    { // get the certificate
+      #include <ATTLSGC.h>
+    }

@@ -1,0 +1,71 @@
+int  printATTLS(struct  TTLS_IOCTL * pioc,
+                 int rv, int rc, int rs)
+{
+    HEREIAM;
+    if (check("printATTLS",rv,rc,rs) != 0)
+       return(8);
+    printf("query.header.TTLSHdr_BytesNeeded %d\n",
+        query.header.TTLSHdr_BytesNeeded);
+    printf("BPX1IOC Policy:%s\n",Stat_Policy[pioc->TTLSi_Stat_Policy]);
+    printf("BPX1IOC Conn  :%s\n", Stat_Conn[ pioc->TTLSi_Stat_Conn]);
+    printf("BPX1IOC Type  :%s\n", Set_type[ pioc->TTLSi_Sec_Type]);
+    char * pProt = "Unknown Protocol";
+    switch( pioc->TTLSi_SSL_Prot)
+    {
+      case TTLS_PROT_UNKNOWN: pProt = "TTLS_PROT_UNKNOWN";break;
+      case TTLS_PROT_SSLV2  : pProt = "TTLS_PROT_SSLV2  ";break;
+      case TTLS_PROT_SSLV3  : pProt = "TTLS_PROT_SSLV3  ";break;
+      case TTLS_PROT_TLSV1  : pProt = "TTLS_PROT_TLSV1  ";break;
+      case TTLS_PROT_TLSV1_1: pProt = "TTLS_PROT_TLSV1_1";break;
+      case TTLS_PROT_TLSV1_2: pProt = "TTLS_PROT_TLSV1_2";break;
+      case TTLS_PROT_TLSV1_3: pProt = "TTLS_PROT_TLSV1_3";break;
+    }
+//  printf("SSL Protocol Version  %u\n",  pioc->TTLSi_SSL_ProtVer);
+//  printf("SSL Protocol Modifier %hhu\n",  pioc->TTLSi_SSL_ProtMod);
+    printf("SSL protocol version %s\n",pProt);
+    if (pioc->TTLSi_Neg_Cipher[0] != 0 )
+    {
+      if ( memcmp(&pioc-> TTLSi_Neg_Cipher[0] ,"4X",2) == 0)
+      printf("SSL Cipher  %4.4s\n",pioc->TTLSi_Neg_Cipher4   );
+      else
+      printf("SSL Cipher    %2.2s\n",pioc->TTLSi_Neg_Cipher   );
+    }
+    if (pioc->TTLSi_Neg_KeyShare[0]!= 0)
+      printf("SSL key share   %4.4s\n",pioc->TTLSi_Neg_KeyShare   );
+    int lUserid = pioc->TTLSi_UserID_Len;
+    if (lUserid                >0)
+    {
+      printf("userid %*.*s\n",lUserid,lUserid,&pioc->TTLSi_UserID[0]);
+    }
+//  if ( pioc->TTLSi_Neg_KeyShare[0] != 0)
+
+//  printf("Buffer len %d address %8.8x\n",
+//      pioc->TTLSi_BufferLen,
+//        pioc->TTLSi_BufferPtr);
+    if (pioc->TTLSi_BufferLen > 0
+       && pioc->TTLSi_BufferPtr > 0)
+    {
+      int len = 256;
+      if (pioc->TTLSi_BufferLen < len)
+      len = pioc->TTLSi_BufferLen;
+      printHex(stdout,pioc->TTLSi_BufferPtr,len );
+      char * pData = (char *) pioc->TTLSi_BufferPtr;
+                    // offsets are from start of header
+      if (query.q1.TTLSQ_Offset > 0)
+        printf("Rule name    %s.\n",&pData[query.q1.TTLSQ_Offset]);
+      else
+        printf("Rule name missing\n");
+      if (query.q2.TTLSQ_Offset > 0)
+        printf("Group Action %s.\n",&pData[query.q2.TTLSQ_Offset]);
+      else
+        printf("Group Action missing\n");
+      if (query.q3.TTLSQ_Offset > 0)
+        printf("Environment  %s.\n",&pData[query.q3.TTLSQ_Offset]);
+      else
+        printf("Environment  missing\n");
+      if (query.q4.TTLSQ_Offset > 0)
+        printf("Connection   %s.\n",&pData[query.q4.TTLSQ_Offset]);
+      else
+        printf("Connection   missing\n");
+   }
+}
