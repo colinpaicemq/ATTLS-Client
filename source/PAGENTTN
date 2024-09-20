@@ -1,0 +1,431 @@
+#  2024/06/24 comment out ClientAuthType statements(2)
+TTLSRule                      COLATTLJ
+{
+  LocalPortRange              4000
+# Jobname                     COLCOMPI
+# Userid                      COLIN
+  Direction                   BOTH
+  TTLSGroupActionRef          TNGA
+  TTLSEnvironmentActionRef    TNEA
+  TTLSConnectionActionRef     TNCA
+}
+TTLSRule                      COLATTLS
+{
+  LocalPortRange              4000
+# Jobname                     COLATTLS
+  Userid                      START1
+  Direction                   BOTH
+  TTLSGroupActionRef          TNGA
+  TTLSEnvironmentActionRef    TNEA
+  TTLSConnectionActionRef     TNCA
+}
+TTLSConnectionAction              TNCA
+{
+  TTLSCipherParmsRef              TLS13TLS12
+  TTLSSignatureParmsRef           TNESigParms
+  TTLSConnectionAdvancedParmsRef  TNCOonAdvParms
+  CtraceClearText                 Off
+  Trace                           255
+}
+TTLSConnectionAdvancedParms       TNCOonAdvParms
+{
+## ServerCertificateLabel  NISTECC521
+#ServerHandshakeSNI      Required
+#ServerHandshakeSNIMatch Required
+#ServerHandshakeSNIList  COLINCLIENZ/NISTECC521
+#ServerHandshakeSNIList  COLINCLIENZ2/BB
+#ServerCertificateLabel  RSA2048
+#ccp this was added
+  ApplicationControlled         On
+  SSLv3          OFF
+  TLSv1          OFF
+  TLSv1.1        OFF
+  TLSv1.2        ON
+  TLSv1.3        Off
+  SecondaryMap   OFF
+  HandshakeTimeout 3
+}
+TTLSSignatureParms                TNESigParms
+{
+   CLientECurves Any
+##EC only
+#  SignaturePairs     060305030403
+##RSA only
+#  SignaturePairs     06010501040103010201
+}
+TTLSEnvironmentAction                 TNEA
+{
+# HandshakeRole                       ServerWithClientAuth
+  HandshakeRole                       Server
+  TTLSKeyringParms
+  {
+    Keyring                   start1/TN3270
+  }
+  TTLSSignatureParmsRef       TNESigParms
+  TTLSCipherParmsRef  TLS13
+}
+TTLSCipherParms             TLS13TLS12
+{
+#TLS 1.3
+ V3CipherSuites      TLS_CHACHA20_POLY1305_SHA256
+#V3CipherSuites      TLS_AES_256_GCM_SHA384
+#V3CipherSuites      TLS_AES_128_GCM_SHA256
+#TLS 1.2
+# NSTECC
+ V3CipherSuites      TLS_RSA_WITH_AES_256_CBC_SHA256
+ V3CipherSuites   TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+#RSA
+}
+TTLSCipherParms             TLS13
+{
+ V3CipherSuites      TLS_CHACHA20_POLY1305_SHA256
+}
+TTLSGroupAction             TNGA
+{
+  TTLSEnabled               ON
+  trace                     255
+}
+#########################added Dec 18 2023
+TTLSRule                      TNZZZZ
+{
+  LocalPortRange              2023
+  Jobname                     TN3270
+  Direction                   INBOUND
+  TTLSGroupActionRef          TNGA
+  TTLSEnvironmentActionRef    TNEA
+  TTLSConnectionActionRef     TNCA
+}
+TTLSSignatureParms                TNESigParms2
+{
+   CLientECurves Any
+}
+
+#-----####################################
+TTLSRule                         CSSMTPRule
+{
+   RemotePortRange               25
+   Direction                     Outbound
+   TTLSGroupActionRef            CSSMTPGroup
+   TTLSEnvironmentActionRef      CSSMTPEnvironment
+}
+TTLSGroupAction                  CSSMTPGroup
+{
+   TTLSEnabled                   On
+   Trace                         7
+}
+TTLSEnvironmentAction            CSSMTPEnvironment
+{
+   HandshakeRole                 Client
+   TTLSKeyRingParms
+   {
+      Keyring                   START1/TN3270
+   }
+ TTLSEnvironmentAdvancedParms
+   {
+    TLSv1.1                    Off
+    TLSv1.2                    On
+    ApplicationControlled      On
+   }
+}
+#######MFA##########
+# ******************************************************************
+#  5655-MA1
+#  ¸ Rocket Software, Inc. or its affiliates 2019.
+#  All Rights Reserved.
+# ******************************************************************
+#  AZFTTLSX - Initial version
+# ******************************************************************
+#  DESCRIPTION:
+#    Sample AT-TLS rule definitions for AZF.
+#
+#    Server rules to support AZF Web Services:
+#
+#      AZFSrvAuthRule - TLS server not requiring mutual auth
+#      AZFMutAuthRule - TLS server requiring mutual auth
+#
+#    A client rule, adaptable to support one or more Factors that
+#    require TLS-protected outbound communication:
+#
+#      AZFClientRule - TLS client
+#
+#    Examples of such Factors include:
+#
+#      AZFCKCTC
+#      AZFISAM1
+#      AZFLDAP1 (if using a secure LDAP port)
+#      AZFRADP1 (if using TCP)
+#      AZFSIDP3
+#
+# ******************************************************************
+#
+#  MODIFICATION INSTRUCTIONS FOR ALL RULES:
+#
+#  If running z/OS 2.4 or later, enable TLSv1.3 by removing
+#  the comment character '#' from all TLSv1.3 directives.
+#
+# ******************************************************************
+#
+#  MODIFICATION INSTRUCTIONS FOR SERVER RULES:
+#
+#  Replace ?serverAuthPort? with server auth port from STC settings.
+#
+#  Replace ?mutualAuthPort? with mutual auth port from STC settings.
+#
+#  Replace ?keyringName? with name of keyring that holds AZF web
+#  server certificate and private key.
+#
+#  Note: If not using AZF certificate authentication features, the
+#        following clauses can be safely removed:
+#
+#          AZFMutAuthRule
+#          AZFEnvActionMutual
+#          AZFEnvAdvMutual
+#          AZFConnActionMutual
+#          AZFConnAdvParmsMutual
+#
+# ******************************************************************
+#
+#  MODIFICATION INSTRUCTIONS FOR CLIENT RULES:
+#
+#  Copy and rename the example client rule to create a new rule
+#  targeting a specific remote port.
+#
+#  Replace ?outboundPort? with the port number on which the remote
+#  TLS server is listening for incoming connections.
+#
+#  Replace ?clientRingName? with the name of a SAF keyring that is
+#  connected to the CA certificate at the root of the remote
+#  server's issuing chain.
+#
+# ******************************************************************
+
+TTLSRule AZFSrvAuthRule
+{
+  LocalAddr ALL
+  RemoteAddr ALL
+  LocalPortRange 6793
+  Direction Inbound
+  Priority 255
+  TTLSGroupActionRef AZFGroupAction1
+  TTLSEnvironmentActionRef AZFEnvAction1
+  TTLSConnectionActionRef AZFConnAction1
+}
+TTLSRule CPJES2IN
+{
+  LocalAddr ALL
+  RemoteAddr ALL
+  LocalPortRange 2252
+  Direction Inbound
+  Priority 255
+  TTLSGroupActionRef AZFGroupAction1
+  TTLSEnvironmentActionRef AZFEnvAction1
+  TTLSConnectionActionRef AZFConnAction1
+}
+TTLSRule CPJES2OUT
+{
+# LocalAddr ALL
+  RemoteAddr 10.1.0.2
+  RemotePortRange 2175
+  Direction Outbound
+  Priority 255
+#  TTLSGroupActionRef            CSSMTPGroup
+#  TTLSEnvironmentActionRef      CSSMTPEnvironment
+# TTLSConnectionActionRef AZFConnAction1ACON
+  TTLSGroupActionRef AZFGroupAction1
+  TTLSEnvironmentActionRef AZFEnvAction1Client
+  TTLSConnectionActionRef AZFConnAction1
+}
+
+TTLSRule AZFMutAuthRule
+{
+  LocalAddr ALL
+  RemoteAddr ALL
+  LocalPortRange 6794
+  Direction Inbound
+  Priority 255
+  TTLSGroupActionRef AZFGroupAction1
+  TTLSEnvironmentActionRef AZFEnvActionMutual
+  TTLSConnectionActionRef AZFConnActionMutual
+}
+
+TTLSRule AZFClientRule
+{
+  Jobname                         AZF*
+  LocalAddr                       ALL
+  RemoteAddr                      6793
+# RemotePortRange                 ?outboundPort?
+  Direction                       Outbound
+  Priority                        255
+  TTLSEnvironmentActionRef        eActAZFClient
+  TTLSGroupActionRef              AZFGroupAction1
+  TTLSConnectionActionRef         AZFConnAction1
+}
+
+TTLSKeyringParms AZFKeyringParms
+{
+  Keyring start1/TN3270
+}
+
+TTLSKeyringParms AZFClientKeyringParms
+{
+  Keyring start1/TN3270
+}
+
+TTLSGroupAction AZFGroupAction1
+{
+  TTLSEnabled On
+  Trace 255
+}
+
+TTLSEnvironmentAction AZFEnvAction1
+{
+  HandshakeRole Server
+  EnvironmentUserInstance 0
+  TTLSEnvironmentAdvancedParmsRef AZFEnvAdvServer
+  TTLSKeyringParmsRef AZFKeyringParms
+  Trace 255
+}
+
+TTLSEnvironmentAction AZFEnvAction1Client
+{
+  HandshakeRole Client
+  EnvironmentUserInstance 0
+  TTLSEnvironmentAdvancedParmsRef AZFEnvAdvServer
+  TTLSKeyringParmsRef AZFKeyringParms
+  Trace 255
+  TTLSEnvironmentAdvancedParms
+     {
+      TLSv1.1                    Off
+      TLSv1.2                    On
+      TLSv1.3                    Off
+#     ApplicationControlled      Off
+     }
+}
+
+TTLSEnvironmentAction AZFEnvActionMutual
+{
+  HandshakeRole ServerWithClientAuth
+  EnvironmentUserInstance 0
+  TTLSEnvironmentAdvancedParmsRef AZFEnvAdvMutual
+  TTLSKeyringParmsRef AZFKeyringParms
+  Trace 255
+}
+
+TTLSEnvironmentAction eActAZFClient
+{
+  HandshakeRole                   Client
+  EnvironmentUserInstance         1
+  TTLSKeyringParmsRef             AZFClientKeyringParms
+  Trace                           255
+  TTLSEnvironmentAdvancedParmsRef eAdvAZFClient
+}
+TTLSConnectionAction AZFConnAction1
+{
+  TTLSCipherParmsRef AZFCipherParms
+  TTLSConnectionAdvancedParmsRef AZFConnAdvParms1
+  CtraceClearText Off
+  Trace 255
+}
+#TLSConnectionAction AZFConnAction1ACON
+#{
+# TTLSCipherParmsRef AZFCipherParms
+# TTLSConnectionAdvancedParmsRef AZFConnAdvParms1ACON
+# CtraceClearText Off
+# Trace 255
+#}
+
+TTLSConnectionAction AZFConnActionMutual
+{
+  TTLSCipherParmsRef AZFCipherParms
+  TTLSConnectionAdvancedParmsRef AZFConnAdvParmsMutual
+  CtraceClearText Off
+  Trace 255
+}
+
+TTLSEnvironmentAdvancedParms AZFEnvAdvServer
+{
+# ClientAuthType PassThru
+  ApplicationControlled Off
+  SSLv2 Off
+  SSLv3 Off
+  TLSv1 Off
+  TLSv1.1 Off
+  TLSv1.2 On
+# On z/OS 2.4 or later, delete the leading '#' from the next line.
+#  TLSv1.3 On
+}
+
+TTLSEnvironmentAdvancedParms AZFEnvAdvMutual
+{
+  ClientAuthType Required
+  ApplicationControlled Off
+  # default for tlsv1 is on
+# TLSv1 Off
+  # default for tlsv1.1 is on
+  TLSv1.1 Off
+  TLSv1.2 On
+# On z/OS 2.4 or later, delete the leading '#' from the next line.
+#  TLSv1.3 On
+}
+
+TTLSEnvironmentAdvancedParms eAdvAZFClient
+{
+  ApplicationControlled Off
+  # default for tlsv1 is on
+  TLSv1 Off
+  # default for tlsv1.1 is on
+  TLSv1.1 Off
+  TLSv1.2 On
+  TLSv1 Off
+  TLSv1.1 Off
+  TLSv1.2 On
+#On z/OS 2.4 or later, delete the leading '#' from the next line.
+# TLSv1.3 On
+}
+
+TTLSConnectionAdvancedParms AZFConnAdvParms1
+{
+  # added by colin
+# ServerCertificateLabel    NISTECC521
+  ServerCertificateLabel    RSA2048
+# ServerCertificateLabel    NEWTECCTEST
+  CertificateLabel  RSA2048
+# ApplicationControlled OFF
+# SecondaryMap Off
+}
+TTLSConnectionAdvancedParms AZFConnAdvParms1ACON
+{
+  # added by colin
+# ServerCertificateLabel    NISTECC521
+  ServerCertificateLabel    RSA2048
+# ServerCertificateLabel    NEWTECCTEST
+  ApplicationControlled Off
+  SecondaryMap Off
+}
+
+TTLSConnectionAdvancedParms AZFConnAdvParmsMutual
+{
+  ServerCertificateLabel    RSA2048
+# ServerCertificateLabel    NISTECC521
+  HandshakeTimeout 120
+  ApplicationControlled Off
+  SecondaryMap Off
+}
+
+TTLSCipherParms AZFCipherParms
+{
+  V3CipherSuites TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+  V3CipherSuites TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
+  V3CipherSuites TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+  V3CipherSuites TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
+  V3CipherSuites TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+  V3CipherSuites TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+  V3CipherSuites TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+# TLSv1.3
+  V3CipherSuites      TLS_CHACHA20_POLY1305_SHA256
+# TLSv1.2
+  V3CipherSuites4Char TLS_CHACHA20_POLY1305_SHA256
+  V3CipherSuites4Char TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
+  V3CipherSuites4Char TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256
+  V3CipherSuites4Char TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256 C02
+}
