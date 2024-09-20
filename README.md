@@ -1,2 +1,2 @@
-# ATTLS-Client
-A TCPIP client on z/OS which uses AT-TLS
+# ATTLS-Sample 
+A very basic TCPIP sample on z/OS to illustrate the use of a managed AT-TLS connection
