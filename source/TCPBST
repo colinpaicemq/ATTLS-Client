@@ -1,4 +1,4 @@
-// program to act as a TCP/IP client on z/OS supporting ATTLS
+// program to act as a TCP/IP serveron z/OS supporting ATTLS
 //  Author - Colin Paice colinpaice3@gmail.com
 //
 // Use the following on Linux (your parameters will be different)
@@ -12,7 +12,8 @@
 //
 // This prompts for data which is sent to the server
 //
-//  Attach a subtask for the pthread change to certificate
+//  Attach a subtask for the pthread change to certificate,
+//  So thread can change userid to the certificate
 #pragma runopts(POSIX(ON)
 // define debug trace info
 #define HEREIAM printf("File:%s Line:%d  \n", __FILE__,__LINE__);
@@ -62,21 +63,6 @@ main(argc, argv)
 int argc;
 char **argv;
 {
- typedef struct _colin1 {
-     int                         i1;
-     int                         i2;
- } colin1               ;
- typedef struct _colin2 {
-     int                         h1;
-     int                         h2;
-     union {
-         colin1                  cc1;
-         int                     i3;
-     } u;
- } colinz        ;
-long const  myconst      = 99;
- colinz colinz2;
- printf("size of %i\n",sizeof(colinz));
 
   printf("Compiled %s %s.\n", __DATE__, __TIME__);
   pthread_t thid;
