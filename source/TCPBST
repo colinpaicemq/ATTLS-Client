@@ -77,7 +77,7 @@ char **argv;
 long const  myconst      = 99;
  colinz colinz2;
  printf("size of %i\n",sizeof(colinz));
- #ifdef temp
+
   printf("Compiled %s %s.\n", __DATE__, __TIME__);
   pthread_t thid;
   int rc;
@@ -99,6 +99,6 @@ long const  myconst      = 99;
   if (rc  != 0) {
   }
   printf("thread exited with '%s'\n", ret);
-  #endif
+
   return 0  ;
 }
