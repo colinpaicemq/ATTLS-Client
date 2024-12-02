@@ -16,7 +16,7 @@ void *thread(void *arg) {
   struct sockaddr_in client; /* client address information          */
   struct sockaddr_in server; /* server address information          */
   int  sock;                 /* socket for accepting connections    */
-  int namelen;               /* length of client name               */
+//int namelen;               /* length of client name               */
 
   /*
    * First argument should be the port.
@@ -145,7 +145,7 @@ void *thread(void *arg) {
   printf("BPX1RCV bytes %d data... %4.4s\n",rv,buf );
  // memcpy(&buf[0],"COLIN",5);
     lbuff = rv;
-  char * pOut = &outBuff[0];
+//char * pOut = &outBuff[0];
   ascii_it(&outBuff[0],lOutBuff);
   HEREIAM
 //printHex(stdout,&outBuff,lOutBuff);

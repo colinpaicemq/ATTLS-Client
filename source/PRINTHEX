@@ -73,6 +73,7 @@ void printHex(FILE * pFile,void *buff, int length)
 //
 // ascii_it
 //
+      char other_tab[256];
 void ascii_it(char * pBuffer, int lBuffer)
 {
   // set up the conversion table

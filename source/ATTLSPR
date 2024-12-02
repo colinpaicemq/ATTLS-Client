@@ -37,6 +37,8 @@ int  printATTLS(struct  TTLS_IOCTL * pioc,
     {
       printf("userid %*.*s\n",lUserid,lUserid,&pioc->TTLSi_UserID[0]);
     }
+    else
+      printf(" length of userid is 0\n");
 //  if ( pioc->TTLSi_Neg_KeyShare[0] != 0)
 
 //  printf("Buffer len %d address %8.8x\n",

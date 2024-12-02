@@ -1,4 +1,4 @@
-// program to act as a TCP/IP serveron z/OS supporting ATTLS
+// program to act as a TCP/IP client on z/OS supporting ATTLS
 //  Author - Colin Paice colinpaice3@gmail.com
 //
 // Use the following on Linux (your parameters will be different)
@@ -12,11 +12,12 @@
 //
 // This prompts for data which is sent to the server
 //
-//  Attach a subtask for the pthread change to certificate,
-//  So thread can change userid to the certificate
+//  Attach a subtask for the pthread change to certificate
 #pragma runopts(POSIX(ON)
 // define debug trace info
-#define HEREIAM printf("File:%s Line:%d  \n", __FILE__,__LINE__);
+char * pApp = "";
+//efine HEREIAM printf("File:%s Line:%d  \n", __FILE__,__LINE__);
+#define HEREIAM //
    #define _OPEN_SYS 1
    #define  _OPEN_THREADS
    #include <pthread.h>
@@ -46,9 +47,15 @@ int check( char * name, int rv, int rc, int rs)
 {
   if ( rv == -1) // problem
     {
+      int code;
+      code = rs   & 0x0000ffff;
       perror(name);
       printf("%s rv %d rc %s(%d) rs %d (0x%8.8x) %s\n",
       name,rv,getnoerr(rc),rc,rs,rs,strerror(rc));
+      printf("Look for code %8.4x\n",code);
+      if (code = 0x00007337)
+      printf("(ApplicationControlled is off -"
+          "should be on for this test\n");
     }
     else
       printf("%s rv %d\n",name,rv);
@@ -63,16 +70,17 @@ main(argc, argv)
 int argc;
 char **argv;
 {
-
   printf("Compiled %s %s.\n", __DATE__, __TIME__);
   pthread_t thid;
   int rc;
   void *ret;
-   if (argc != 2)
+   if (argc <  2)
    {
-       fprintf(stderr, "Usage: %s port\n", argv[0]);
+       fprintf(stderr, "Usage: %s port <app>\n", argv[0]);
        exit(1);
    }
+   if (argc == 3)
+      pApp = argv[2];
   if (pthread_create(&thid, NULL, thread, argv[1]) != 0) {
     perror("pthread_create() error");
     exit(1);
@@ -85,6 +93,5 @@ char **argv;
   if (rc  != 0) {
   }
   printf("thread exited with '%s'\n", ret);
-
   return 0  ;
 }

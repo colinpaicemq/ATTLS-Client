@@ -1,5 +1,5 @@
 //COLCOMPI   JOB 1,MSGCLASS=H,COND=(4,LE)
-//* Job to compile and execute TCP client using ATTLS
+//* Job to compile and execute TCP server using ATTLS
 //* uses port 4000
 //S1          JCLLIB ORDER=CBC.SCCNPRC
 // SET LOADLIB=COLIN.LOAD2
@@ -38,8 +38,7 @@ DEBUG(FILE(/tmp/colin.dbg),level(3))
 //BIND.SYSIN DD *
   NAME  TCPATTLS(R)
 //START1   EXEC PGM=TCPATTLS,REGION=0M,
-//   PARM='4000'
-//*PARM=('ENVAR("_CEE_ENVFILE=DD:STDENV")/4000')
+//   PARM='8803'
 //STDENV DD *
 GSK_TRACE=0xff
 /*
@@ -52,3 +51,4 @@ GSK_TRACE=0xff
 //CEEDUMP  DD SYSOUT=*,DCB=(LRECL=200)
 //ENV DD *
 /*
+//*PARM=('ENVAR("_CEE_ENVFILE=DD:STDENV")/4000')

@@ -3,7 +3,8 @@
   //  Get the certificate
   //
   HEREIAM
-  char * applid = "ZZZ";
+//char * applid = "ZZZ";
+  char * applid = "";
   memset(&ioc,0,sizeof(ioc));     //* set all unused fields to zero
   ioc.TTLSi_Req_Type = TTLS_QUERY_ONLY ;
   int command;
@@ -41,6 +42,9 @@
             &rc,
             &rs);
    HEREIAM
+   printf("lengh of userid %i\n",ioc.TTLSi_UserID_Len);
+   printf("ioc \n");
+   printHex(stdout,&ioc,sizeof(ioc));
    printf("ioc.TTLSi_Cert_Len %d \n",ioc.TTLSi_Cert_Len);
    printf("get cert  IOC\n");
    if (check("BPX1IOC Get cert",rv,rc,rs) != 0)
@@ -49,46 +53,82 @@
    // use certificate to change userid
 
    struct __certificate  ct;
+   memset(&ct,0,sizeof(ct));// preset it to 0
    ct.__cert_type = __CERT_X509;
    char * pData = (char *)  ioc.TTLSi_BufferPtr;
               // offsets are from start of header
    ct.__cert_length = ioc.TTLSi_Cert_Len;
    ct.__cert_ptr    =& pData[query.q1.TTLSQ_Offset] ;
    printHex(stdout,ct.__cert_ptr, 66);
-   rc = pthread_security_applid_np(__CREATE_SECURITY_ENV,
+   if (strlen(pApp) != 0 )
+   {
+
+     applid = pApp;
+     printf("Using pthread_security_applid_np with app %s\n",
+            pApp);
+     rc = pthread_security_applid_np(__CREATE_SECURITY_ENV,
+              __CERTIFICATE_IDENTITY,
+              sizeof(ct),
+              &ct,
+              "xxxxxxxx",     // dummy password ignored
+              0,applid);
+   }
+   else
+   {
+     printf("Using pthread_security_np.\n");
+     rc = pthread_security_np(__CREATE_SECURITY_ENV,
             __CERTIFICATE_IDENTITY,
             sizeof(ct),
             &ct,
             "xxxxxxxx",
-            0,applid);
+            0);
+   }
+   //  save these
+   int iErrno,iErrno2;
+   iErrno = errno;
+   iErrno2 = __errno2();
    if ( rc != 0)
      perror("pthead security");
-   switch (errno)
-   {
-   case ESRCH :
-     printf("ESRCH:"
-     "The user ID provided as input is not defined to the "
-     "security product or does not have an OMVS segment defined"
-     "\n");
-     break;
-   }
   if (rc != 0)
   {
-  lOutBuff = sprintf(&outBuff[0],
-  "pthread_s... applid %s  rc = %d errno %d %s errno2 %8.8x\n\n",
+//  lOutBuff = sprintf(&outBuff[0],
+    printf(
+    "pthread_s... applid %s, rc = %d errno %d %s errno2 %8.8x\n\n",
           applid,
-          rc,errno,strerror(errno),__errno2());
+          rc,iErrno,strerror(iErrno),iErrno2);
+    switch (iErrno)
+    {
+      case ESRCH :
+       printf("ESRCH:"
+       "The user ID provided as input is not defined to the "
+       "security product or does not have an OMVS segment defined"
+       "\n");
+       printf("... or mapping from cerificate to userid missing\n");
+       printf("Example                                        \n");
+       printf(" RACDCERT MAP ID(IBMUSER)  -                   \n");
+       printf("    WITHLABEL('IBMUSER1Label') -               \n");
+       printf("    SDNFILTER('CN=colinpaice.O=cpwebuser.C=GB') n");
+       printf(" RACDCERT LISTMAP ID(IBMUSER)                  \n");
+       printf(" SETROPTS RACLIST(DIGTNMAP, DIGTCRIT) REFRESH  \n");
+       printf("                                               \n");
+       break;
+   }
   }
   else
   {
     rc = __getuserid(&userid[0], userlen);
-    if (rc != 0)
-      printf("getuser rc %d\n",rc);
+    if (rc == 0)
+    {
+    printf("getuser rc %d\n",rc);
     printf("userid %d  %*.*s\n",userlen,userlen,userlen,userid);
-    lOutBuff = sprintf(&outBuff[0],
-          "pthread_s... applid %s rc = 0 userid %*.*s.\n",
+//  lOutBuff = sprintf(&outBuff[0],
+    printf("pthread_s... applid %s rc = 0 userid %*.*s.\n",
           applid,
           userlen,userlen,userid);
+    }
+    else
+    perror(" __getuserid:");
   }
+  // display common errors
    HEREIAM
-  printf("%s\n",outBuff);
+//printf("%s\n",outBuff);
